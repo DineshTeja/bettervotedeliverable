@@ -3,7 +3,7 @@ import "./globals.css";
 import MessagesProvider from "@/datasources/messagesContext";
 
 export const metadata: Metadata = {
-  title: "Influence AI",
+  title: "BetterVote Scraper",
   description: "Generative AI search for brand ambassadors",
 };
 

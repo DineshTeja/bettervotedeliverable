@@ -11,6 +11,7 @@ import { useEffect, useRef, useState } from "react";
 import MessagesProvider, { useMessages } from "@/datasources/messagesContext";
 import { v4 as uuidv4 } from "uuid";
 import ChatView from "@/components/ui/chatView";
+import axios from 'axios'; // Assuming you're using axios for HTTP requests
 
 function View() {
   const [isAnswering, setIsAnswering] = useState(false);
@@ -19,7 +20,7 @@ function View() {
 
   const { messages, addMessage } = useMessages();
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (chatInput.trim() === "") return;
     setChatInput("");
 
@@ -27,26 +28,65 @@ function View() {
 
     console.log("Adding", chatInput, "to messages.");
 
-    addMessage(
-      {
-        id: uuidv4(),
-        text: chatInput,
-        timestamp: Date.now(),
-        sender: "user",
-      },
-      "new"
-    );
+    addMessage({
+      id: uuidv4(),
+      text: chatInput,
+      timestamp: Date.now(),
+      sender: "user",
+    }, "new");
 
-    // CHANGE LATER
-    addMessage(
-      {
+    try {
+      const searchQuery = `${chatInput} donor`;
+      const response = await axios.get(`https://api.scrape-it.cloud/scrape/google?q=${encodeURIComponent(searchQuery)}`, {
+        headers: {
+          'x-api-key':  process.env.NEXT_PUBLIC_SCRAPE_IT_API_KEY, // Use your actual Scrape It API key
+          'Content-Type' : 'application/json'
+        }
+      });
+
+      const keywords = ["supporters","donor", "fundraise", "funds", "donations", "donate", "support", "giving", "donate"];
+      let foundRelevantLink = false;
+      let messageText = "No relevant donation link found.";
+
+      const firstThreeResults = response.data.organicResults.slice(0, 3);
+      for (const result of firstThreeResults) {
+        if (keywords.some(keyword => result.title.toLowerCase().includes(keyword) || result.link.toLowerCase().includes(keyword))) {
+          messageText = `${result.title} - ${result.link}`;
+          foundRelevantLink = true;
+
+          // If a relevant link is found, send it to the server for name scraping
+          try {
+            console.log("made it");
+            const namesResponse = await fetch('http://localhost:8080/scrape-names', {
+              method: "POST",
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ url: result.link }) // Correctly include the URL in the request body
+            });        
+          } catch (scrapeError) {
+            console.error("Error scraping names:", scrapeError);
+            messageText += ". Error occurred while scraping names.";
+          }
+          break; // Stop searching once a match is found
+        }
+      }
+
+      addMessage({
         id: uuidv4(),
-        text: "Add response feature later",
+        text: messageText,
         timestamp: Date.now(),
         sender: "ai",
-      },
-      "new"
-    );
+      }, "new");
+    } catch (error) {
+      console.error("Error fetching search results:", error);
+      addMessage({
+        id: uuidv4(),
+        text: "Failed to fetch search results.",
+        timestamp: Date.now(),
+        sender: "ai",
+      }, "new");
+    }
 
     setIsAnswering(false);
   };
@@ -62,10 +102,10 @@ function View() {
         {/* Title card */}
         <div className="flex flex-col items-center gap-1 p-12">
           <div className="font-extrabold text-3xl text-slate-800">
-            Influence.ai
+            BetterVote
           </div>
           <div className="text-slate-500 font-medium">
-            Find your next brand ambassador using AI
+            Finding thousands of potential campaign donors in seconds. 
           </div>
         </div>
 
@@ -82,7 +122,7 @@ function View() {
       {/* Text input */}
       <div className="flex flex-row gap-2 w-full border border-slate-200 rounded-xl bg-white">
         <ReactTextareaAutosize
-          placeholder="Chat with Influence.ai"
+          placeholder="Scrape with BetterVote"
           value={chatInput}
           disabled={isAnswering}
           onChange={(e) => setChatInput(e.target.value)}
