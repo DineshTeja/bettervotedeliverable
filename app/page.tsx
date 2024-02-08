@@ -78,8 +78,8 @@ function View() {
       ];
       let maxScore = 0;
       // Initialize mostRelevantLink with a more specific type
-      let mostRelevantLink: SearchResult | null = null;
-
+      let mostRelevantLink: SearchResult | "" = "";
+      
       // The rest of your code remains the same
       const firstTenResults = response.data.organicResults.slice(0, 5);
       firstTenResults.forEach((result: SearchResult, index: number) => {
