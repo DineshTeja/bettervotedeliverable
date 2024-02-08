@@ -7,7 +7,8 @@ export default function ChatView({ message }: { message: Message }) {
 
   // Determine if the message contains names with tiers or just names
   const isNamesWithTiersArray = Array.isArray(message.text) && message.text.every(item => typeof item === 'object' && 'name' in item && 'tier' in item);
-  const hasAdditionalText = typeof message.additionalText === 'string';
+  // const hasAdditionalText = typeof message.additionalText === 'string';
+  const hasAdditionalText = typeof (message as any).additionalText === 'string';
 
   const visibleItemCount = 10; // Adjust this number as needed
 
