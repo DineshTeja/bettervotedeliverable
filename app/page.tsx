@@ -106,10 +106,9 @@ function View() {
 
       if (mostRelevantLink) {
         // messageText = `${mostRelevantLink.title} - ${mostRelevantLink.link}`;
-        // Type guard to ensure mostRelevantLink is not an empty string
-        if (typeof mostRelevantLink === "object" && "title" in mostRelevantLink && "link" in mostRelevantLink) {
-          messageText = `${mostRelevantLink.title} - ${mostRelevantLink.link}`;
-        }
+
+        const link = mostRelevantLink as SearchResult;
+        messageText = `${link.title} - ${link.link}`;
 
         // If a relevant link is found, send it to the server for name scraping
         try {
