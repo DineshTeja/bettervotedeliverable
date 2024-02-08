@@ -16,9 +16,10 @@ import {
 
 export interface Message {
   id: string;
-  text: string | { name: string; tier: string }[];
+  text: string;
   timestamp: number;
   sender: "user" | "ai" | "system";
+  additionalText?: string; // Add this line to include additionalText in the Message type
 }
 
 interface MessagesContextProps {

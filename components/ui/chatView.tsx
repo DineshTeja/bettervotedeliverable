@@ -13,14 +13,26 @@ export default function ChatView({ message }: { message: Message }) {
   const visibleItemCount = 10; // Adjust this number as needed
 
   // Sort the names so that names with non-empty tiers appear first
-  const sortedNamesWithTiers = isNamesWithTiersArray ? message.text.sort((a, b) => {
-    if (a.tier && !b.tier) {
-      return -1;
-    } else if (!a.tier && b.tier) {
-      return 1;
-    }
-    return 0;
-  }) : [];
+  // const sortedNamesWithTiers = isNamesWithTiersArray ? message.text.sort((a, b) => {
+  //   if (a.tier && !b.tier) {
+  //     return -1;
+  //   } else if (!a.tier && b.tier) {
+  //     return 1;
+  //   }
+  //   return 0;
+  // }) : [];
+
+  // Ensure sortedNamesWithTiers is always treated as an array of the correct type
+  const sortedNamesWithTiers = isNamesWithTiersArray 
+    ? ((message.text as unknown) as { name: string; tier: string }[]).sort((a, b) => {
+        if ('tier' in a && !('tier' in b)) {
+            return -1;
+        } else if (!('tier' in a) && 'tier' in b) {
+            return 1;
+        }
+        return 0;
+    }) 
+    : [];
 
   return (
     <div className="flex flex-col gap-2 w-full">
@@ -47,7 +59,8 @@ export default function ChatView({ message }: { message: Message }) {
         </>
       ) : hasAdditionalText ? (
         // Render the additional text if no names are identified and additional text exists
-        <div className="text-slate-800 text-md">{message.additionalText}</div>
+        // <div className="text-slate-800 text-md">{message.additionalText}</div>
+        <div className="text-slate-800 text-md">{(message as any).additionalText}</div>
       ) : (
         // Render the regular text message if no names and no additional text
         // Assuming message.text is a string here. If it's not, you might need to adjust.
