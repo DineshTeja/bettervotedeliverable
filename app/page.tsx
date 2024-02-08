@@ -11,7 +11,7 @@ import { useEffect, useRef, useState } from "react";
 import MessagesProvider, { useMessages } from "@/datasources/messagesContext";
 import { v4 as uuidv4 } from "uuid";
 import ChatView from "@/components/ui/chatView";
-import axios from 'axios'; // Assuming you're using axios for HTTP requests
+import axios from "axios"; // Assuming you're using axios for HTTP requests
 
 function View() {
   const [isAnswering, setIsAnswering] = useState(false);
@@ -28,64 +28,137 @@ function View() {
 
     console.log("Adding", chatInput, "to messages.");
 
-    addMessage({
-      id: uuidv4(),
-      text: chatInput,
-      timestamp: Date.now(),
-      sender: "user",
-    }, "new");
+    addMessage(
+      {
+        id: uuidv4(),
+        text: chatInput,
+        timestamp: Date.now(),
+        sender: "user",
+      },
+      "new"
+    );
 
     try {
-      const searchQuery = `${chatInput} donor`;
-      const response = await axios.get(`https://api.scrape-it.cloud/scrape/google?q=${encodeURIComponent(searchQuery)}`, {
-        headers: {
-          'x-api-key':  process.env.NEXT_PUBLIC_SCRAPE_IT_API_KEY, // Use your actual Scrape It API key
-          'Content-Type' : 'application/json'
+      const searchQuery = `${chatInput} donors`;
+      const response = await axios.get(
+        `https://api.scrape-it.cloud/scrape/google?q=${encodeURIComponent(searchQuery)}`,
+        {
+          headers: {
+            "x-api-key": process.env.NEXT_PUBLIC_SCRAPE_IT_API_KEY,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const keywords = [
+        "acknowledgements",
+        "supporters",
+        "donor",
+        "donors",
+        "fundraise",
+        "funds",
+        "donations",
+        "support",
+        "list",
+        "listing",
+        "partners",
+        "trustees"
+      ];
+      let maxScore = 0;
+      let mostRelevantLink = null;
+
+      const firstTenResults = response.data.organicResults.slice(0, 5);
+      firstTenResults.forEach((result, index) => {
+        // Skip the result if the title is originally in lowercase
+        if (result.title === result.title.toLowerCase()) {
+          return;
+        }
+      
+        let score = keywords.reduce(
+          (acc, keyword) =>
+            acc +
+            (result.title.toLowerCase().includes(keyword) ? 1 : 0) +
+            (result.link.toLowerCase().includes(keyword) ? 1 : 0),
+          0
+        );
+      
+        if (score > maxScore || (score === maxScore && mostRelevantLink === null)) {
+          maxScore = score;
+          mostRelevantLink = result;
         }
       });
 
-      const keywords = ["supporters","donor", "fundraise", "funds", "donations", "donate", "support", "giving", "donate"];
-      let foundRelevantLink = false;
       let messageText = "No relevant donation link found.";
 
-      const firstThreeResults = response.data.organicResults.slice(0, 3);
-      for (const result of firstThreeResults) {
-        if (keywords.some(keyword => result.title.toLowerCase().includes(keyword) || result.link.toLowerCase().includes(keyword))) {
-          messageText = `${result.title} - ${result.link}`;
-          foundRelevantLink = true;
+      if (mostRelevantLink) {
+        messageText = `${mostRelevantLink.title} - ${mostRelevantLink.link}`;
 
-          // If a relevant link is found, send it to the server for name scraping
-          try {
-            console.log("made it");
-            const namesResponse = await fetch('http://localhost:8080/scrape-names', {
-              method: "POST",
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ url: result.link }) // Correctly include the URL in the request body
-            });        
-          } catch (scrapeError) {
-            console.error("Error scraping names:", scrapeError);
-            messageText += ". Error occurred while scraping names.";
+        // If a relevant link is found, send it to the server for name scraping
+        try {
+          const namesResponse = await fetch("/scrape", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ url: mostRelevantLink.link }), // Correctly include the URL in the request body
+          });
+          // Assuming the server responds with names, append them to the message
+          const namesData = await namesResponse.json();
+
+          // Instead of adding each name as a separate message, create a single message object that returns multiple
+          if (namesData.names_with_tiers) {
+            const nameWithTierMessages = {
+              id: uuidv4(),
+              text: namesData.names_with_tiers, // Array of names
+              additionalText:
+                mostRelevantLink.title + " - " + mostRelevantLink.link, // Regular message text
+              timestamp: Date.now(),
+              sender: "ai",
+              isName: true, // Indicate that this message contains names
+            };
+            addMessage(nameWithTierMessages, "new");
+          } else {
+            const namesMessage = {
+              id: uuidv4(),
+              text: namesData.names, // Array of names
+              additionalText:
+                mostRelevantLink.title + " - " + mostRelevantLink.link, // Regular message text
+              timestamp: Date.now(),
+              sender: "ai",
+              isName: true, // Indicate that this message contains names
+            };
+
+            addMessage(namesMessage, "new");
+
+            console.log(namesData.paragraph_texts);
+            messageText += ` - Names Found: ${namesData.names.join(", ")}`;
           }
-          break; // Stop searching once a match is found
+        } catch (scrapeError) {
+          console.error("Error scraping names:", scrapeError);
+          messageText += ". Error occurred while scraping names.";
         }
       }
 
-      addMessage({
-        id: uuidv4(),
-        text: messageText,
-        timestamp: Date.now(),
-        sender: "ai",
-      }, "new");
+      addMessage(
+        {
+          id: uuidv4(),
+          text: messageText,
+          timestamp: Date.now(),
+          sender: "ai",
+        },
+        "new"
+      );
     } catch (error) {
       console.error("Error fetching search results:", error);
-      addMessage({
-        id: uuidv4(),
-        text: "Failed to fetch search results.",
-        timestamp: Date.now(),
-        sender: "ai",
-      }, "new");
+      addMessage(
+        {
+          id: uuidv4(),
+          text: "Failed to fetch search results.",
+          timestamp: Date.now(),
+          sender: "ai",
+        },
+        "new"
+      );
     }
 
     setIsAnswering(false);
@@ -105,7 +178,7 @@ function View() {
             BetterVote
           </div>
           <div className="text-slate-500 font-medium">
-            Finding thousands of potential campaign donors in seconds. 
+            Finding thousands of potential campaign donors in seconds.
           </div>
         </div>
 
