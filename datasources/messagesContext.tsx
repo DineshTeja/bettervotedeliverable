@@ -7,9 +7,16 @@ import {
   useState,
 } from "react";
 
+// export interface Message {
+//   id: string;
+//   text: string;
+//   timestamp: number;
+//   sender: "user" | "ai" | "system";
+// }
+
 export interface Message {
   id: string;
-  text: string;
+  text: string | { name: string; tier: string }[];
   timestamp: number;
   sender: "user" | "ai" | "system";
 }
