@@ -79,7 +79,7 @@ function View() {
       let maxScore = 0;
       // Initialize mostRelevantLink with a more specific type
       let mostRelevantLink: SearchResult | "" = "";
-      
+
       // The rest of your code remains the same
       const firstTenResults = response.data.organicResults.slice(0, 5);
       firstTenResults.forEach((result: SearchResult, index: number) => {
@@ -105,7 +105,11 @@ function View() {
       let messageText = "No relevant donation link found.";
 
       if (mostRelevantLink) {
-        messageText = `${mostRelevantLink.title} - ${mostRelevantLink.link}`;
+        // messageText = `${mostRelevantLink.title} - ${mostRelevantLink.link}`;
+        // Type guard to ensure mostRelevantLink is not an empty string
+        if (typeof mostRelevantLink === "object" && "title" in mostRelevantLink && "link" in mostRelevantLink) {
+          messageText = `${mostRelevantLink.title} - ${mostRelevantLink.link}`;
+        }
 
         // If a relevant link is found, send it to the server for name scraping
         try {
