@@ -107,8 +107,8 @@ function View() {
       if (mostRelevantLink) {
         // messageText = `${mostRelevantLink.title} - ${mostRelevantLink.link}`;
 
-        const link = mostRelevantLink as SearchResult;
-        messageText = `${link.title} - ${link.link}`;
+        const rel_link = mostRelevantLink as SearchResult;
+        messageText = `${rel_link.title} - ${rel_link.link}`;
 
         // If a relevant link is found, send it to the server for name scraping
         try {
@@ -117,7 +117,7 @@ function View() {
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ url: mostRelevantLink.link }), // Correctly include the URL in the request body
+            body: JSON.stringify({ url: rel_link.link }), // Correctly include the URL in the request body
           });
           // Assuming the server responds with names, append them to the message
           const namesData = await namesResponse.json();
@@ -128,7 +128,7 @@ function View() {
               id: uuidv4(),
               text: namesData.names_with_tiers, // Array of names
               additionalText:
-                mostRelevantLink.title + " - " + mostRelevantLink.link, // Regular message text
+                rel_link.title + " - " + rel_link.link, // Regular message text
               timestamp: Date.now(),
               sender: "ai",
               isName: true, // Indicate that this message contains names
@@ -139,7 +139,7 @@ function View() {
               id: uuidv4(),
               text: namesData.names, // Array of names
               additionalText:
-                mostRelevantLink.title + " - " + mostRelevantLink.link, // Regular message text
+                rel_link.title + " - " + rel_link.link, // Regular message text
               timestamp: Date.now(),
               sender: "ai",
               isName: true, // Indicate that this message contains names

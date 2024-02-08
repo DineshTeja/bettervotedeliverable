@@ -10,7 +10,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Load the spaCy NLP model for English
-nlp = spacy.load("en_core_web_sm")
+nlp = spacy.load("en_core_web_lg")
 
 def preprocess_text(text):
     text = ' '.join(text.split())
