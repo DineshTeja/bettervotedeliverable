@@ -127,10 +127,9 @@ function View() {
             const nameWithTierMessages = {
               id: uuidv4(),
               text: namesData.names_with_tiers, // Array of names
-              additionalText:
-                rel_link.title + " - " + rel_link.link, // Regular message text
+              additionalText: rel_link.title + " - " + rel_link.link, // Regular message text
               timestamp: Date.now(),
-              sender: "ai",
+              sender: "ai" as "ai", // Explicitly cast the string literal type
               isName: true, // Indicate that this message contains names
             };
             addMessage(nameWithTierMessages, "new");
@@ -138,13 +137,12 @@ function View() {
             const namesMessage = {
               id: uuidv4(),
               text: namesData.names, // Array of names
-              additionalText:
-                rel_link.title + " - " + rel_link.link, // Regular message text
+              additionalText: rel_link.title + " - " + rel_link.link, // Regular message text
               timestamp: Date.now(),
-              sender: "ai",
+              sender: "ai" as "ai", // Explicitly cast the string literal type
               isName: true, // Indicate that this message contains names
             };
-
+          
             addMessage(namesMessage, "new");
 
             console.log(namesData.paragraph_texts);
