@@ -13,6 +13,18 @@ import { v4 as uuidv4 } from "uuid";
 import ChatView from "@/components/ui/chatView";
 import axios from "axios"; // Assuming you're using axios for HTTP requests
 
+// Define an interface for the structure of a search result
+interface SearchResult {
+  position?: number;
+  title: string;
+  link: string;
+  displayedLink?: string;
+  source?: string;
+  snippet?: string;
+  snippetHighlitedWords?: string[];
+  richSnippet?: any; // Define more specific type if known
+}
+
 function View() {
   const [isAnswering, setIsAnswering] = useState(false);
   const [chatInput, setChatInput] = useState("");
@@ -65,15 +77,17 @@ function View() {
         "trustees"
       ];
       let maxScore = 0;
-      let mostRelevantLink = null;
+      // Initialize mostRelevantLink with a more specific type
+      let mostRelevantLink: SearchResult | null = null;
 
+      // The rest of your code remains the same
       const firstTenResults = response.data.organicResults.slice(0, 5);
-      firstTenResults.forEach((result, index) => {
+      firstTenResults.forEach((result: SearchResult, index) => {
         // Skip the result if the title is originally in lowercase
         if (result.title === result.title.toLowerCase()) {
           return;
         }
-      
+
         let score = keywords.reduce(
           (acc, keyword) =>
             acc +
@@ -81,7 +95,7 @@ function View() {
             (result.link.toLowerCase().includes(keyword) ? 1 : 0),
           0
         );
-      
+
         if (score > maxScore || (score === maxScore && mostRelevantLink === null)) {
           maxScore = score;
           mostRelevantLink = result;
