@@ -82,12 +82,12 @@ function View() {
 
       // The rest of your code remains the same
       const firstTenResults = response.data.organicResults.slice(0, 5);
-      firstTenResults.forEach((result: SearchResult, index) => {
+      firstTenResults.forEach((result: SearchResult, index: number) => {
         // Skip the result if the title is originally in lowercase
         if (result.title === result.title.toLowerCase()) {
           return;
         }
-
+      
         let score = keywords.reduce(
           (acc, keyword) =>
             acc +
@@ -95,7 +95,7 @@ function View() {
             (result.link.toLowerCase().includes(keyword) ? 1 : 0),
           0
         );
-
+      
         if (score > maxScore || (score === maxScore && mostRelevantLink === null)) {
           maxScore = score;
           mostRelevantLink = result;
